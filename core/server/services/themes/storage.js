@@ -75,13 +75,15 @@ module.exports = {
                 name: themeName,
                 path: checkedTheme.path
             });
+
             // CASE: loads the theme from the fs & sets the theme on the themeList
             const loadedTheme = await themeLoader.loadOneTheme(themeName);
             overrideTheme = (themeName === settingsCache.get('active_theme'));
+
             // CASE: if this is the active theme, we are overriding
             if (overrideTheme) {
-                debug('setFromZip Theme is active alreadu');
-                activator.activateFromOverride(themeName, loadedTheme, checkedTheme);
+                debug('setFromZip Theme is active already');
+                activator.activateFromAPIOverride(themeName, loadedTheme, checkedTheme);
             }
 
             // @TODO: unify the name across gscan and Ghost!
@@ -98,6 +100,8 @@ module.exports = {
                             throw error;
                         });
                     }
+
+                    throw error;
                 });
             }
 

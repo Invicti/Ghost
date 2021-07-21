@@ -1,19 +1,32 @@
+const errors = require('@tryghost/errors');
+const tpl = require('@tryghost/tpl');
 const MembersSSR = require('@tryghost/members-ssr');
 const db = require('../../data/db');
 const MembersConfigProvider = require('./config');
-const MembersCSVImporter = require('./importer');
+const MembersCSVImporter = require('@tryghost/members-importer');
 const MembersStats = require('./stats');
 const createMembersApiInstance = require('./api');
 const createMembersSettingsInstance = require('./settings');
 const logging = require('@tryghost/logging');
 const urlUtils = require('../../../shared/url-utils');
+const labsService = require('../../../shared/labs');
 const settingsCache = require('../../../shared/settings-cache');
 const config = require('../../../shared/config');
 const ghostVersion = require('@tryghost/version');
 const _ = require('lodash');
+const {GhostMailer} = require('../mail');
+const jobsService = require('../jobs');
+
+const messages = {
+    noLiveKeysInDevelopment: 'Cannot use live stripe keys in development. Please restart in production mode.',
+    sslRequiredForStripe: 'Cannot run Ghost without SSL when Stripe is connected. Please update your url config to use "https://".',
+    remoteWebhooksInDevelopment: 'Cannot use remote webhooks in development. See https://ghost.org/docs/webhooks/#stripe-webhooks for developing with Stripe.'
+};
 
 // Bind to settings.edited to update systems based on settings changes, similar to the bridge and models/base/listeners
 const events = require('../../lib/common/events');
+
+const ghostMailer = new GhostMailer();
 
 const membersConfig = new MembersConfigProvider({
     config,
@@ -68,16 +81,17 @@ const membersService = {
 
         if (env !== 'production') {
             if (!process.env.WEBHOOK_SECRET && membersConfig.isStripeConnected()) {
-                throw new Error('Cannot use remote webhooks in development. Please restart in production mode or see https://ghost.org/docs/webhooks/#stripe-webhooks for developing with Stripe.');
+                process.env.WEBHOOK_SECRET = 'DEFAULT_WEBHOOK_SECRET';
+                logging.warn(tpl(messages.remoteWebhooksInDevelopment));
             }
 
             if (paymentConfig && paymentConfig.secretKey.startsWith('sk_live')) {
-                throw new Error('Cannot use live stripe keys in development. Please restart in production mode.');
+                throw new errors.IncorrectUsageError(tpl(messages.noLiveKeysInDevelopment));
             }
         } else {
             const siteUrl = urlUtils.getSiteUrl();
             if (!/^https/.test(siteUrl) && membersConfig.isStripeConnected()) {
-                throw new Error('Cannot run Ghost without SSL when Stripe is connected. Please update your url config to use "https://"');
+                throw new errors.IncorrectUsageError(tpl(messages.sslRequiredForStripe));
             }
         }
     },
@@ -113,7 +127,16 @@ const membersService = {
 
     stripeConnect: require('./stripe-connect'),
 
-    importer: new MembersCSVImporter({storagePath: config.getContentPath('data')}, settingsCache, () => membersApi),
+    importer: new MembersCSVImporter({
+        storagePath: config.getContentPath('data'),
+        getTimezone: () => settingsCache.get('timezone'),
+        getMembersApi: () => membersApi,
+        sendEmail: ghostMailer.send.bind(ghostMailer),
+        isSet: labsService.isSet.bind(labsService),
+        addJob: jobsService.addJob.bind(jobsService),
+        knex: db.knex,
+        urlFor: urlUtils.urlFor.bind(urlUtils)
+    }),
 
     stats: new MembersStats({
         db: db,
