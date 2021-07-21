@@ -75,10 +75,11 @@ function createSettingsInstance(config) {
 
     const sendEmailAddressUpdateMagicLink = ({email, type = 'fromAddressUpdate'}) => {
         const [,toDomain] = email.split('@');
-        let fromEmail = `noreply@${toDomain}`;
-        if (fromEmail === email) {
-            fromEmail = `no-reply@${toDomain}`;
-        }
+        let fromEmail = email;
+        // let fromEmail = `noreply@${toDomain}`;
+        // if (fromEmail === email) {
+        //     fromEmail = `no-reply@${toDomain}`;
+        // }
         magicLinkService.transporter = {
             sendMail(message) {
                 if (process.env.NODE_ENV !== 'production') {
