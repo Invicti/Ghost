@@ -63,10 +63,15 @@ if (parentPort) {
 
     const {EmailAnalyticsService} = require('@tryghost/email-analytics-service');
     const EventProcessor = require('../lib/event-processor');
-    //const MailgunProvider = require('@tryghost/email-analytics-provider-mailgun');
-    const MailgunProvider = require('../provider-mailtrain');
     const queries = require('../lib/queries');
 
+    let mailgunProvider = {};
+
+    if (process.env.mailtrain_host !== "") {
+        mailgunProvider = require('./mailtrain');
+    } else {
+        mailgunProvider = require('./mailgun');
+    }
     if (process.env.mailtrain_url === '') {
         const emailAnalyticsService = new EmailAnalyticsService({
             config,

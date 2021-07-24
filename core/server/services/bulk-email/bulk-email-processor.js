@@ -5,7 +5,6 @@ const errors = require('@tryghost/errors');
 const i18n = require('../../../shared/i18n');
 const logging = require('@tryghost/logging');
 const models = require('../../models');
-
 const sentry = require('../../../shared/sentry');
 const debug = require('@tryghost/debug')('mega');
 const postEmailSerializer = require('../mega/post-email-serializer');
