@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="index.js" type="NodeJSConfigurationType" nameIsGenerated="true" path-to-js-file="index.js" working-dir="$PROJECT_DIR$">
+    <envs>
+      <env name="url" value="https://nicolas.fodor.net" />
+      <env name="mail_from" value="nicolas@fodor.net" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>

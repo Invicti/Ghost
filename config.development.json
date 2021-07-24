@@ -1,7 +1,45 @@
 {
-    "enableDeveloperExperiments": true,
+    "url": "https://test.fodor.net",
+    "enableDeveloperExperiments" : true,
+    "mail" : {
+        "from" : "nicolas@fodor.net",
+        "transport" : "SMTP",
+        "options" : {
+            "auth" : {
+                "pass" : "MaisonNeuve###131###",
+                "user" : "nicolas@fodor.net"
+            },
+            "host" : "mail.invicti.eu",
+            "port" : 587
+        }
+
+    },
+
     "server": {
         "host": "0.0.0.0",
         "port": 2368
+    },
+    "database": {
+        "client": "sqlite3",
+        "connection": {
+            "filename": "content/data/ghost-dev.db"
+        },
+        "debug": false
+    },
+    "paths": {
+        "contentPath": "content/"
+    },
+    "privacy": {
+        "useRpcPing": false,
+        "useUpdateCheck": true
+    },
+    "useMinFiles": false,
+    "caching": {
+        "theme": {
+            "maxAge": 0
+        },
+        "admin": {
+            "maxAge": 0
+        }
     }
 }
