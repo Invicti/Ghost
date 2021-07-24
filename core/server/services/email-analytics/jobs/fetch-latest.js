@@ -63,35 +63,43 @@ if (parentPort) {
 
     const {EmailAnalyticsService} = require('@tryghost/email-analytics-service');
     const EventProcessor = require('../lib/event-processor');
-    const MailgunProvider = require('@tryghost/email-analytics-provider-mailgun');
+    //const MailgunProvider = require('@tryghost/email-analytics-provider-mailgun');
+    const MailgunProvider = require('../provider-mailtrain');
     const queries = require('../lib/queries');
 
-    const emailAnalyticsService = new EmailAnalyticsService({
-        config,
-        settings,
-        logging,
-        eventProcessor: new EventProcessor({db, logging}),
-        providers: [
-            new MailgunProvider({config, settings, logging})
-        ],
-        queries
-    });
+    if (process.env.mailtrain_url === '') {
+        const emailAnalyticsService = new EmailAnalyticsService({
+            config,
+            settings,
+            logging,
+            eventProcessor: new EventProcessor({db, logging}),
+            providers: [
+                new MailgunProvider({config, settings, logging})
+            ],
+            queries
+        });
 
-    const fetchStartDate = new Date();
-    debug('Starting email analytics fetch of latest events');
-    const eventStats = await emailAnalyticsService.fetchLatest();
-    const fetchEndDate = new Date();
-    debug(`Finished fetching ${eventStats.totalEvents} analytics events in ${fetchEndDate - fetchStartDate}ms`);
+        const fetchStartDate = new Date();
+        debug('Starting email analytics fetch of latest events');
+        const eventStats = await emailAnalyticsService.fetchLatest();
+        const fetchEndDate = new Date();
+        debug(`Finished fetching ${eventStats.totalEvents} analytics events in ${fetchEndDate - fetchStartDate}ms`);
 
-    const aggregateStartDate = new Date();
-    debug(`Starting email analytics aggregation for ${eventStats.emailIds.length} emails`);
-    await emailAnalyticsService.aggregateStats(eventStats);
-    const aggregateEndDate = new Date();
-    debug(`Finished aggregating email analytics in ${aggregateEndDate - aggregateStartDate}ms`);
+        const aggregateStartDate = new Date();
+        debug(`Starting email analytics aggregation for ${eventStats.emailIds.length} emails`);
+        await emailAnalyticsService.aggregateStats(eventStats);
+        const aggregateEndDate = new Date();
+        debug(`Finished aggregating email analytics in ${aggregateEndDate - aggregateStartDate}ms`);
 
-    if (parentPort) {
-        parentPort.postMessage(`Fetched ${eventStats.totalEvents} events and aggregated stats for ${eventStats.emailIds.length} emails in ${aggregateEndDate - fetchStartDate}ms`);
-        parentPort.postMessage('done');
+        if (parentPort) {
+            parentPort.postMessage(`Fetched ${eventStats.totalEvents} events and aggregated stats for ${eventStats.emailIds.length} emails in ${aggregateEndDate - fetchStartDate}ms`);
+            parentPort.postMessage('done');
+        } else {
+            // give the logging pipes time finish writing before exit
+            setTimeout(() => {
+                process.exit(0);
+            }, 1000);
+        }
     } else {
         // give the logging pipes time finish writing before exit
         setTimeout(() => {
