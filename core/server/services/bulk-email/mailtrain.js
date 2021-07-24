@@ -165,15 +165,14 @@ function send(message, recipientData, replacements) {
             let modurl;
             modurl = `https://${process.env.mailtrain_host}/api/templates/1/send?access_token=${settingsCache.get('mailgun_api_key')}`;
             let toemail = encodeURIComponent(Object.keys(recipientData)[0]);
-
+            const fakeID = '3';
             (async () => {
                 try {
-                    // eslint-disable-next-line no-unused-vars
                     const {data} = await axios({
                         method: 'POST',
-                        url: 'https://mailtrain.fodor.net/api/templates/1/send',
+                        url: process.env.mailtrain_url,
                         params: {
-                            access_token: `${settingsCache.get('mailgun_api_key')}`
+                            access_token: settingsCache.get('mailgun_api_key')
                         },
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
@@ -181,7 +180,7 @@ function send(message, recipientData, replacements) {
                         data: reqPayload
                     });
                     return resolve({
-                        id: '3'//data.body.json().id
+                        id: fakeID  //data.body.json().id
                     });
                 } catch (error) {
                     return reject(error.statusText);
